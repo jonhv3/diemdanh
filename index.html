@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Điểm Danh Học Sinh</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .suggestions-list {
+            border: 1px solid #ccc;
+            background: #fff;
+            position: relative;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .suggestions-list div {
+            padding: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .suggestions-list div:hover {
+            background-color: #f0f0f0;
+        }
+
+        #attendanceResultContainer {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        #loadingIndicator, #noDataMessage {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #loadingIndicator {
+            color: blue;
+        }
+
+        #noDataMessage {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Công Cụ Điểm Danh Học Sinh</h1>
+
+        <!-- Kết quả điểm danh -->
+        <div class="section">
+            <h2>Kết Quả Điểm Danh</h2>
+            <div id="loadingIndicator" style="display: none;">Đang tải dữ liệu...</div>
+            <div id="noDataMessage" style="display: none;">Không tìm thấy dữ liệu.</div>
+            <div id="attendanceResultContainer">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên Học Sinh</th>
+                            <th>Thời Gian</th>
+                            <th>Môn Học</th>
+                            <th>Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceResult">
+                        <!-- Dữ liệu sẽ được thêm vào đây -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button id="prevPage" disabled>Trang Trước</button>
+                <button id="nextPage" disabled>Trang Tiếp</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, startAfter, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDL56ekmdndk3wd099KuJWUyogRUa3bwW8",
+            authDomain: "kidstars-7434d.firebaseapp.com",
+            projectId: "kidstars-7434d",
+            storageBucket: "kidstars-7434d.appspot.com",
+            messagingSenderId: "616350873520",
+            appId: "1:616350873520:web:9d765d0bf5a483fa964875",
+            measurementId: "G-FJMK0F1LRN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Phân trang
+        let lastVisible = null;
+        let firstVisible = null;
+        const pageSize = 10;
+
+        async function fetchAttendanceData(next = true) {
+            const loadingIndicator = document.getElementById("loadingIndicator");
+            const noDataMessage = document.getElementById("noDataMessage");
+            const tableBody = document.getElementById("attendanceResult");
+            const prevButton = document.getElementById("prevPage");
+            const nextButton = document.getElementById("nextPage");
+
+            loadingIndicator.style.display = "block";
+            noDataMessage.style.display = "none";
+            tableBody.innerHTML = "";
+
+            try {
+                let q;
+                if (next) {
+                    q = lastVisible
+                        ? query(collection(db, "attendance"), orderBy("date"), startAfter(lastVisible), limit(pageSize))
+                        : query(collection(db, "attendance"), orderBy("date"), limit(pageSize));
+                } else {
+                    q = firstVisible
+                        ? query(collection(db, "attendance"), orderBy("date"), limit(pageSize))
+                        : query(collection(db, "attendance"), orderBy("date"), limit(pageSize));
+                }
+
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    noDataMessage.style.display = "block";
+                    nextButton.disabled = true;
+                } else {
+                    snapshot.docs.forEach(doc => {
+                        const tr = document.createElement("tr");
+                        const record = doc.data();
+                        tr.innerHTML = `
+                            <td>${record}</td>
+                            
+                        `;
+                    });
+                }
+
+            } catch (error) {
+
+            }
+        }
+    </script>
+</body>
+</html>
