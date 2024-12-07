@@ -1,0 +1,23 @@
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: #007bff;
+}
+
+.card {
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 20px;
+}
+
+.btn {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.tab-content .table {
+    margin-top: 20px;
+}
